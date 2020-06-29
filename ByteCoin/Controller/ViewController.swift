@@ -30,15 +30,27 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
     @IBOutlet weak var currencyLabel: UILabel!
     @IBOutlet weak var currencyPicker: UIPickerView!
     
-    let coinManager = CoinManager()
+    var coinManager = CoinManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         currencyPicker.dataSource = self
         currencyPicker.delegate = self
+        coinManager.delegate = self
     }
 
 
 }
 
+//MARK: - CoinManagerDelegate
+extension ViewController: CoinManagerDelegate {
+    func didUpdateCurrency(_ coinManager: CoinManager, currency: CurrencyModel) {
+        DispatchQueue.main.async {
+        }
+    }
+    
+    func didFailWithError(error: Error) {
+        print(error)
+    }
+}
