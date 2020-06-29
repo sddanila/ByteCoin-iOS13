@@ -9,7 +9,7 @@
 import Foundation
 
 protocol CoinManagerDelegate {
-    func didUpdateCurrency(_ coinManager: CoinManager, currency: CurrencyModel)
+    func didUpdateCurrency(_ coinManager: CoinManager, currency: String, price: Double)
     func didFailWithError(error: Error)
 }
 
@@ -22,11 +22,7 @@ struct CoinManager {
     var delegate: CoinManagerDelegate?
 
     func getCoinPrice(for currency: String){
-        let urlString = "\(baseURL)&q=\(currency)?apiKey=\(apiKey)"
-        performRequest(with: urlString)
-    }
-    
-    func performRequest(with urlString: String) {
+        let urlString = "\(baseURL)/\(currency)?apiKey=\(apiKey)"
         //      #1 Create URL
         if let url = URL(string: urlString) {
             //      #2 Create URLSession
@@ -37,13 +33,12 @@ struct CoinManager {
                     self.delegate?.didFailWithError(error: error!)
                     return
                 }
-//                if let safeData = data {
-//                    if let currency = self.parseJSON(safeData) {
-//                        self.delegate?.didUpdateCurrency(self, currency: currency)
-//                    }
-//                }
-                let dataAsString = String(data: data!, encoding: .utf8)
-                print(dataAsString)
+                if let safeData = data {
+                    if let price = self.parseJSON(safeData) {
+                        self.delegate?.didUpdateCurrency(self, currency: currency, price: price)
+                    }
+                }
+                
             }
             //      #4 STart the task
             task.resume()
@@ -51,15 +46,18 @@ struct CoinManager {
         }
     }
     
-    func parseJSON(_ currencyData: Data) -> CurrencyModel? {
+    func performRequest(with urlString: String) {
+
+    }
+    
+    func parseJSON(_ currencyData: Data) ->Double? {
         let decoder = JSONDecoder()
         do {
             let decodedData = try decoder.decode(CurrencyData.self, from: currencyData)
-            print(decodedData.rate)
-            
-            let currency = CurrencyModel(base: decodedData.asset_id_base, quote: decodedData.asset_id_quote, rate: decodedData.rate)
-            
-            return currency
+           
+            let lastRate = decodedData.rate
+            print(lastRate)
+            return lastRate
         } catch  {
             delegate?.didFailWithError(error: error)
             return nil
